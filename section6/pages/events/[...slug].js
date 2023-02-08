@@ -6,8 +6,12 @@ import EventList from '../../components/events/event-list';
 import ResultsTitle from '../../components/events/results-title';
 import Button from '../../components/ui/button';
 import ErrorAlert from '../../components/ui/error-alert';
+import { reorganizedDataFn } from '../../utils/reorganizeData';
+import { findEvent } from '../../utils/findEvent';
 
-function FilteredEventsPage() {
+const api_url = process.env.DB_FIREBASE
+
+function FilteredEventsPage({filteredEvents}) {
   const router = useRouter();
 
   const filterData = router.query.slug;
@@ -30,22 +34,16 @@ function FilteredEventsPage() {
     numMonth < 1 ||
     numMonth > 12
   ) {
-    return (
-      <Fragment>
-        <ErrorAlert>
-          <p>Invalid filter. Please adjust your values!</p>
-        </ErrorAlert>
-        <div className='center'>
-          <Button link='/events'>Show All Events</Button>
-        </div>
-      </Fragment>
-    );
+    return {
+      notFound:true,
+      redirect:'/error'
+    }
   }
 
-  const filteredEvents = getFilteredEvents({
-    year: numYear,
-    month: numMonth,
-  });
+  // const filteredEvents = getFilteredEvents({
+  //   year: numYear,
+  //   month: numMonth,
+  // });
 
   if (!filteredEvents || filteredEvents.length === 0) {
     return (
@@ -71,3 +69,19 @@ function FilteredEventsPage() {
 }
 
 export default FilteredEventsPage;
+
+
+export async function getServerSideProps(context){
+  const {params} = context
+  const raw = await fetch(api_url)
+  const data = await raw.json()
+  const transformedData = reorganizedDataFn(data)
+  let filteredEvents = findEvent(transformedData, params.slug)
+  console.log('===============>',filteredEvents)
+  
+  return {
+    props:{
+      filteredEvents
+    }
+  }
+}
