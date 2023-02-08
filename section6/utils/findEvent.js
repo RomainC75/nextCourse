@@ -7,5 +7,4 @@ export const findEvent = (data, slug) =>{
         const month = date.getMonth() 
         return year===parseInt(slug[0]) && month+1===parseInt(slug[1])
     })
-
 }
